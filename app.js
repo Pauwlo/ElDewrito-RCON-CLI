@@ -5,12 +5,15 @@ const WebSocket = require('ws')
 const HOSTNAME = process.env.HOSTNAME
 const PORT = process.env.PORT
 const PASSWORD = process.env.PASSWORD
+const SHOULD_LOG_CHAT = process.env.ENABLE_CHAT_LOGGING === 'true'
 
 const ws = new WebSocket(`ws://${HOSTNAME}:${PORT}`, 'dew-rcon')
 const rl = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout
 })
+
+let shouldIgnoreNextMessage = false
 
 function readInput() {
 	rl.question('> ', input => {
@@ -25,11 +28,21 @@ function handleInitialMessage(message) {
 	}
 
 	console.log(`Connected to ${HOSTNAME}:${PORT}!`)
+
+	shouldIgnoreNextMessage = true
+	const sendChatToRconClients = SHOULD_LOG_CHAT ? 1 : 0
+	ws.send(`Server.SendChatToRconClients ${sendChatToRconClients}`)
+
 	ws.onmessage = handleMessage
 	readInput()
 }
 
 function handleMessage(message) {
+	if (shouldIgnoreNextMessage) {
+		shouldIgnoreNextMessage = false
+		return
+	}
+
 	message = message.data.trim()
 
 	if (message.length === 0) {
