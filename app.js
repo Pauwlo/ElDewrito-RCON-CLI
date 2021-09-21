@@ -1,4 +1,5 @@
 require('dotenv').config()
+const readline = require('readline')
 const WebSocket = require('ws')
 
 const HOSTNAME = process.env.HOSTNAME
@@ -6,6 +7,16 @@ const PORT = process.env.PORT
 const PASSWORD = process.env.PASSWORD
 
 const ws = new WebSocket(`ws://${HOSTNAME}:${PORT}`, 'dew-rcon')
+const rl = readline.createInterface({
+	input: process.stdin,
+	output: process.stdout
+})
+
+function readInput() {
+	rl.question('> ', input => {
+		ws.send(input)
+	})
+}
 
 function handleInitialMessage(message) {
 	if (message.data !== 'accept') {
@@ -14,7 +25,22 @@ function handleInitialMessage(message) {
 	}
 
 	console.log(`Connected to ${HOSTNAME}:${PORT}!`)
-	ws.onmessage = message => console.log(message.data)
+	ws.onmessage = handleMessage
+	readInput()
+}
+
+function handleMessage(message) {
+	message = message.data.trim()
+
+	if (message.length === 0) {
+		readInput()
+		return
+	}
+
+	process.stdout.cursorTo(0)
+	console.log(message)
+
+	readInput()
 }
 
 ws.onopen = () => { ws.send(PASSWORD) }
