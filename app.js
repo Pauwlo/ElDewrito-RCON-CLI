@@ -30,9 +30,10 @@ const argv = yargs
 const HOSTNAME = argv.hostname ?? process.env.HOSTNAME
 const PORT = argv.port ?? process.env.PORT
 const PASSWORD = argv.password ?? process.env.PASSWORD
+const USE_SSL = process.env.USE_SSL === 'true'
 const SHOULD_LOG_CHAT = process.env.ENABLE_CHAT_LOGGING === 'true'
 
-const ws = new WebSocket(`ws://${HOSTNAME}:${PORT}`, 'dew-rcon')
+const ws = new WebSocket(`ws${USE_SSL ? 's' : ''}://${HOSTNAME}:${PORT}`, 'dew-rcon')
 const rl = readline.createInterface({
 	input: process.stdin,
 	output: process.stdout
